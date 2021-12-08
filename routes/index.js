@@ -26,8 +26,11 @@ function validacaoAlteracao(req, res, next) {
   }
 }
 
+
+
 router.put('/:id', validacaoAlteracao, autenticacao, async function (req, res, next) {
   // SELECT * FROM tarefas WHERE id = 3 AND usuario_id = 12
+ 
   const tarefaExistente = await modelos.Tarefa
     .where('id', '=', req.params.id)
     .where('usuario_id', '=', req.usuario.get('id'))
@@ -186,6 +189,22 @@ router.put('/categorias/:id', validacaoAlteracaoCategoria, autenticacao, async f
   res.json(retorno);
 });
 
+router.put('/:id', autenticacao, validacaoAlteracao, async function (req, res, next) {
+  // select * from tarefas where id = 3 and usuario_id = 12
+  if(req.body.categoria_id){
+    const categoriaExistente = await modelos.Categoria
+      .where('id', '=', req.body.categoria_id)
+      .where('usuario_id', '=', req.usuario.get('id'))
+      .fetch()
+    if (!categoriaExistente) {
+      res.status(400).json({
+        mensagem: 'Categoria não existe'
+      })
+      return;
+  }};
+});
+
+
 // router.delete('/categorias/:id', autenticacao, async function (req, res, next) {
   
 //   const categoriaExistente = await modelos.Categoria
@@ -204,3 +223,4 @@ router.put('/categorias/:id', validacaoAlteracaoCategoria, autenticacao, async f
 // });
 
 module.exports = router;
+
