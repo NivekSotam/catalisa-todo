@@ -17,6 +17,5 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/tarefas', indexRouter);
 app.use('/usuarios', usersRouter);
-app.use('/categoria', indexRouter);
 
 module.exports = app;

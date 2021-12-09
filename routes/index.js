@@ -5,7 +5,7 @@ const autenticacao = require('../helpers/autenticacao');
 const Joi = require('joi');
 const { json } = require('express');
 
-router.get('/', autenticacao, async function(req, res, next) {
+router.get('/', autenticacao, async function (req, res, next) {
   // SELECT * FROM terefas WHERE usuario_id = ?
   const retorno = await modelos.Tarefa
     .where('usuario_id', '=', req.usuario.get('id'))
@@ -30,7 +30,7 @@ function validacaoAlteracao(req, res, next) {
 
 router.put('/:id', validacaoAlteracao, autenticacao, async function (req, res, next) {
   // SELECT * FROM tarefas WHERE id = 3 AND usuario_id = 12
- 
+
   const tarefaExistente = await modelos.Tarefa
     .where('id', '=', req.params.id)
     .where('usuario_id', '=', req.usuario.get('id'))
@@ -47,7 +47,7 @@ router.put('/:id', validacaoAlteracao, autenticacao, async function (req, res, n
   res.json(retorno);
 });
 
-router.put('/:id/conclusao' , autenticacao, async function (req, res, next) {
+router.put('/:id/conclusao', autenticacao, async function (req, res, next) {
   const tarefaExistente = await modelos.Tarefa
     .where('id', '=', req.params.id)
     .where('usuario_id', '=', req.usuario.get('id'))
@@ -90,7 +90,7 @@ function validacaoCadastro(req, res, next) {
   const schema = Joi.object({
     titulo: Joi.string().min(1).max(300).required(),
     concluida: Joi.boolean().required(),
-    categoria_id: Joi.number() ,
+    categoria_id: Joi.number(),
   });
   const resultado = schema.validate(req.body);
   if (resultado.error) {
@@ -101,37 +101,38 @@ function validacaoCadastro(req, res, next) {
 }
 
 
-router.post('/', validacaoCadastro, autenticacao, async function(req, res, next) {
-  
-    const verificarTarefa = await modelos.Tarefa
-      .where('titulo', '=', req.body.titulo)
-      .where('usuario_id', '=', req.usuario.get('id'))
-      .fetch();
-      
-    if(verificarTarefa){
-      res.status(400).json({
-        mensagem: 'tarefa já existe'
-      })
-    }
+router.post('/', validacaoCadastro, autenticacao, async function (req, res, next) {
 
+  const verificarTarefa = await modelos.Tarefa
+    .where('titulo', '=', req.body.titulo)
+    .where('usuario_id', '=', req.usuario.get('id'))
+    .fetch();
+
+  if (verificarTarefa) {
+    res.status(400).json({
+      mensagem: 'tarefa já existe'
+    })
+  }
+  if (req.body.categoria_id) {
     const verificarCategoria = await modelos.Categoria
       .where('id', '=', req.body.categoria_id)
       .where('usuario_id', '=', req.usuario.get('id'))
       .fetch();
-      
-    if(!verificarCategoria){
+
+    if (!verificarCategoria) {
       res.status(400).json({
         mensagem: 'categoria não existe'
       })
     }
+  }
 
-    const tarefa = new modelos.Tarefa({
-      titulo: req.body.titulo,
-      concluida: req.body.concluida,
-      data_criacao: new Date(),
-      categoria_id: req.body.categoria_id,
-      usuario_id: req.usuario.get('id'),
-    });
+  const tarefa = new modelos.Tarefa({
+    titulo: req.body.titulo,
+    concluida: req.body.concluida,
+    data_criacao: new Date(),
+    categoria_id: req.body.categoria_id,
+    usuario_id: req.usuario.get('id'),
+  });
 
   const retorno = await tarefa.save();
   res.status(201).json(retorno);
@@ -143,7 +144,7 @@ function validacaoAlteracaoCategoria(req, res, next) {
     nome: Joi.string().min(1).max(200),
   });
   const resultado = schema.validate(req.body);
-  if (resultado.error){
+  if (resultado.error) {
     res.status(400).json(resultado.error);
   } else {
     next();
@@ -152,7 +153,7 @@ function validacaoAlteracaoCategoria(req, res, next) {
 
 router.post('/categorias', validacaoAlteracaoCategoria, autenticacao, async function (req, res, next) {
   const categoriaExistente = await modelos.Categoria
-    .where('nome','=', req.body.nome)
+    .where('nome', '=', req.body.nome)
     .fetch()
   if (categoriaExistente) {
     res.status(400).json({
@@ -183,7 +184,7 @@ router.put('/categorias/:id', validacaoAlteracaoCategoria, autenticacao, async f
     });
     return;
   }
-  alteracao.set({'nome': req.body.nome});
+  alteracao.set({ 'nome': req.body.nome });
 
   const retorno = await alteracao.save();
   res.json(retorno);
@@ -191,7 +192,7 @@ router.put('/categorias/:id', validacaoAlteracaoCategoria, autenticacao, async f
 
 router.put('/:id', autenticacao, validacaoAlteracao, async function (req, res, next) {
   // select * from tarefas where id = 3 and usuario_id = 12
-  if(req.body.categoria_id){
+  if (req.body.categoria_id) {
     const categoriaExistente = await modelos.Categoria
       .where('id', '=', req.body.categoria_id)
       .where('usuario_id', '=', req.usuario.get('id'))
@@ -201,12 +202,19 @@ router.put('/:id', autenticacao, validacaoAlteracao, async function (req, res, n
         mensagem: 'Categoria não existe'
       })
       return;
-  }};
+    }
+  };
 });
 
+router.get('/categorias/listar', autenticacao, async function (req,res, next){
+    const retorno = await modelos.Categoria
+      .where('usuario_id', '=', req.usuario.get('id'))
+      .fetchAll();
+    res.json(retorno)
+})
 
 // router.delete('/categorias/:id', autenticacao, async function (req, res, next) {
-  
+
 //   const categoriaExistente = await modelos.Categoria
 //     .where('id', '=', req.params.id)
 //     .where('usuario_id', '=', req.usuario.get('id'))
